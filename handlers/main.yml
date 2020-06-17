@@ -1,0 +1,7 @@
+---
+# handlers file for role-traefik
+
+- name: restart_traefik
+  docker_container:
+    name: load_balancer
+    restart: true

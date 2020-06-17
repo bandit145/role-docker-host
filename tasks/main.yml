@@ -1,0 +1,68 @@
+---
+# tasks file for role-docker-host
+
+- name: main | firewall ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop:
+    - 80/tcp
+    - 443/tcp
+    - 8080/tcp
+
+- name: main | install epel-release
+  yum:
+    name: epel-release
+    state: present
+
+- name: main | copy docker repo
+  copy:
+    src: docker-ce.repo
+    dest: /etc/yum.repos.d/
+
+- name: main | install packages
+  yum:
+    name:
+      - docker-ce
+      - docker-compose
+      - python36-docker
+      - libselinux-python3
+    state: present
+
+- name: main | start docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+    use: service
+
+- name: main | copy config file
+  template:
+    src: traefik.yml
+    dest: /etc/traefik.yml
+  notify: restart_traefik
+
+- name: main | docker network
+  docker_network:
+    name: services
+
+- name: main | configure traefik container
+  docker_container:
+    name: load_balancer
+    image: traefik:{{ traefik_version }}
+    restart_policy: unless-stopped
+    networks_cli_compatible: true
+    networks:
+      - name: services
+    volumes:
+      - /etc/traefik.yml:/etc/traefik/traefik.yml:z
+      - /var/run/docker.sock:/var/run/docker.sock:z
+    ports:
+      - "443:443/tcp"
+      - "80:80/tcp"
+      - "8080:8080"
+
+
+

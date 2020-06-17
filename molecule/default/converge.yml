@@ -1,0 +1,46 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    traefik_config:
+      providers:
+        docker: {}
+      api:
+        insecure: true
+      entrypoints:
+        http:
+          address: ":80"
+        https:
+          address: ":443"
+
+  tasks:
+    - name: "Include role-traefik"
+      include_role:
+        name: "role-traefik"
+
+- name: apply test docker-compose
+  hosts: all
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+
+    - name: docker-compose test
+      docker_compose:
+        project_name: test
+        definition:
+          version: "3"
+          services:
+            whoami:
+              image: "containous/whoami"
+              networks:
+                - services
+              labels:
+                - "traefik.enable=true"
+                - "traefik.http.routers.whoami.entrypoints=http"
+                - "traefik.http.routers.whoami.rule=PathPrefix(`/`)"
+          networks:
+            services:
+              external:
+                name: services

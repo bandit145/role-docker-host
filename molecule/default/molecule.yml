@@ -1,0 +1,23 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+lint: |
+    set -e
+    yamllint .
+    ansible-lint
+    flake8
+platforms:
+  - name: container
+    box: bento/centos-7
+    interfaces:
+        - network_name: private_network
+          type: static
+          ip: 192.168.200.2
+    memory: 4096
+    cpus: 2
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

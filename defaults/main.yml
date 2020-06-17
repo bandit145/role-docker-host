@@ -1,0 +1,4 @@
+---
+# defaults file for role-traefik
+
+traefik_version: latest

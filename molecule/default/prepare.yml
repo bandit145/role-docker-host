@@ -1,0 +1,17 @@
+- name: prepare
+  hosts: all
+  become: true
+  tasks:
+
+    - name: start firewall
+      service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: allow ssh
+      firewalld:
+        port: 22/tcp
+        permanent: true
+        immediate: true
+        state: enabled
